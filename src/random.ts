@@ -1,8 +1,12 @@
 import crypto from 'crypto';
 import { BigNumber } from 'bignumber.js';
 
+import 'source-map-support/register';
+
 export class Random {
-  constructor() {
+  private bytes: number;
+  constructor(bytes: number) {
+    this.bytes = bytes;
   }
 
   private isPrime(num: BigNumber): boolean {
@@ -27,19 +31,16 @@ export class Random {
     return true;
   }
 
-  public generateRandom(bits: number): Promise<BigNumber> {
+  public generateRandom(): Promise<BigNumber> {
     return new Promise((resolve, reject) => {
-      if (bits % 8 !== 0) {
-        reject('Must be a multiple of 8');
-      }
-      crypto.randomBytes(bits / 8, (error, buffer) => {
+      crypto.randomBytes(this.bytes, (error, buffer) => {
         error ? reject(error) : resolve(new BigNumber(buffer.toString('hex'), 16));
       });
     });
   }
-  public async generateRandomPrime(bits: number): Promise<BigNumber> {
+  public async generateRandomPrime(): Promise<BigNumber> {
     while (true) {
-      const num = await this.generateRandom(bits);
+      const num = await this.generateRandom();
       if (this.isPrime(num)) {
         return num;
       }
