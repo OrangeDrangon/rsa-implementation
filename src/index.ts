@@ -1,6 +1,6 @@
 import { Encryptor } from './encryptor';
 
 (async () => {
-  const encryptor = new Encryptor(4);
+  const encryptor = new Encryptor(1);
   console.log(await encryptor.generateKeys());
 })();
