@@ -2,7 +2,7 @@ import { Encryptor } from './encryptor';
 import { BigNumber } from 'bignumber.js';
 
 (async () => {
-  const encryptor = new Encryptor(1);
+  const encryptor = new Encryptor(4);
   const keys = await encryptor.generateKeys();
   if (keys) {
     const e = keys.publicKey.exponent;
