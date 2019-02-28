@@ -29,7 +29,7 @@ export class Encryptor {
     const d = this.extendedEuclideanAlgo(e, totient);
 
     if (d) {
-      console.log({
+      return {
         publicKey: {
           modulus: n,
           exponent: e,
@@ -38,15 +38,9 @@ export class Encryptor {
           modulus: n,
           exponent: d,
         },
-      });
-      try {
-        const ed = new BigNumber(123).pow(e).mod(n).plus(n).mod(n);
-        const dd = ed.pow(d).mod(n).plus(n).mod(n);
-
-        console.log(ed.toString(), dd.toString(), dd.isEqualTo(123));
-      } catch (error) { }
-
+      };
     }
+    return;
   }
 
   private gcd(a: BigNumber, b: BigNumber): BigNumber {
