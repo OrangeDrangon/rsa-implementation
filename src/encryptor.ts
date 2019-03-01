@@ -1,31 +1,34 @@
 import { BigNumber } from 'bignumber.js';
 
 import { Random } from './random';
+import { Utils } from './util';
 
 export class Encryptor {
   private random: Random;
 
-  constructor(bytes: number) {
-    this.random = new Random(bytes);
+  constructor(bytes: number, primes: number[]) {
+    this.random = new Random(bytes, primes);
   }
 
-  public async generateKeys() {
-    const p = await this.random.generateRandomPrime();
-    const q = await this.random.generateRandomPrime();
-
-    // const p = new BigNumber(53);
-    // const q = new BigNumber(61);
+  public async generateKeys(): Promise<IKeys | undefined> {
+    let p = new BigNumber(0);
+    let q = new BigNumber(1);
+    do {
+      p = await this.random.generateRandomPrime(10);
+      q = await this.random.generateRandomPrime(10);
+    } while (p.isEqualTo(q));
 
     const n = p.times(q);
 
     const totient = p.minus(1).times(q.minus(1));
 
-    let e = new BigNumber(3);
-    for (e; e.isLessThan(totient); e = e.plus(1)) {
+    let e = new BigNumber('10001', 16);
+    for (e; e.isGreaterThanOrEqualTo(3); e = e.minus(2)) {
       if (this.isCoprime(e, totient)) {
         break;
       }
     }
+
     const d = this.extendedEuclideanAlgo(e, totient);
 
     if (d) {
@@ -41,6 +44,12 @@ export class Encryptor {
       };
     }
     return;
+  }
+
+  public consumeKeys(key: IKey, data: BigNumber) {
+    const { exponent, modulus } = key;
+
+    return Utils.powMod(data, exponent, modulus);
   }
 
   private gcd(a: BigNumber, b: BigNumber): BigNumber {

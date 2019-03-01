@@ -1,19 +1,20 @@
 import { Encryptor } from './encryptor';
 import { BigNumber } from 'bignumber.js';
 
+import { primes } from './primes';
+
 (async () => {
-  const encryptor = new Encryptor(4);
+  const encryptor = new Encryptor(4, primes);
   const keys = await encryptor.generateKeys();
   if (keys) {
-    const e = keys.publicKey.exponent;
-    const d = keys.privateKey.exponent;
-    const n = keys.privateKey.modulus;
-
     try {
-      const ed = new BigNumber(123).pow(e).mod(n).plus(n).mod(n);
-      const dd = ed.pow(d).mod(n).plus(n).mod(n);
+      console.log(keys);
+      const ed = encryptor.consumeKeys(keys.publicKey, new BigNumber(123));
+      const dd = encryptor.consumeKeys(keys.privateKey, ed);
 
-      console.log(ed.toString(), dd.toString(), dd.isEqualTo(123));
-    } catch (error) { }
+      console.log(ed.toString(), dd.toString());
+    } catch (error) {
+      console.error(error);
+    }
   }
 })();

@@ -2,14 +2,46 @@ import crypto from 'crypto';
 import { BigNumber } from 'bignumber.js';
 
 import 'source-map-support/register';
+import { Utils } from './util';
 
 export class Random {
   private bytes: number;
-  constructor(bytes: number) {
+  private primes: number[];
+  constructor(bytes: number, primes: number[]) {
     this.bytes = bytes;
+    this.primes = primes;
   }
 
-  private isPrime(num: BigNumber): boolean {
+  private millerRabin(num: BigNumber, d: BigNumber) {
+    const a = new BigNumber(Math.random())
+      .times(num.minus(4))
+      .plus(5)
+      .integerValue(BigNumber.ROUND_FLOOR);
+
+    let x = Utils.powMod(a, d, num);
+
+    if (x.isEqualTo(1) || x.isEqualTo(num.minus(1))) {
+      return true;
+    }
+
+    let dNew = d.minus(0);
+
+    while (!dNew.isEqualTo(num.minus(1))) {
+      x = Utils.powMod(x, new BigNumber(2), num);
+      dNew = d.times(2);
+
+      if (x.isEqualTo(1)) {
+        return false;
+      }
+
+      if (x.isEqualTo(num.minus(1))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private isPrime(num: BigNumber, k: number): boolean {
     if (num.isEqualTo(2) || num.isEqualTo(3)) {
       return true;
     }
@@ -18,16 +50,20 @@ export class Random {
       return false;
     }
 
-    const sqrt = num.squareRoot();
-    let i = new BigNumber(3);
-
-    while (i.isLessThan(sqrt)) {
-      if (num.mod(i).isEqualTo(0)) {
+    for (const prime of this.primes) {
+      if (num.mod(prime).isEqualTo(0)) {
         return false;
       }
-      i = i.plus(2);
     }
-
+    let d = num.minus(1);
+    while (d.mod(2).isEqualTo(0)) {
+      d = d.dividedBy(2).integerValue(BigNumber.ROUND_FLOOR);
+    }
+    for (let i = 0; i < k; i += 1) {
+      if (!this.millerRabin(num, d)) {
+        return false;
+      }
+    }
     return true;
   }
 
@@ -38,10 +74,10 @@ export class Random {
       });
     });
   }
-  public async generateRandomPrime(): Promise<BigNumber> {
+  public async generateRandomPrime(k: number): Promise<BigNumber> {
     while (true) {
       const num = await this.generateRandom();
-      if (this.isPrime(num)) {
+      if (this.isPrime(num, k)) {
         return num;
       }
     }
